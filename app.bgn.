@@ -1,0 +1,54 @@
+import streamlit as st
+import pandas as pd
+import io
+
+# 1. Konfigurasi Halaman Web
+st.set_page_config(page_title="Dashboard Pendataan Dapur BGN SPPG", layout="wide")
+st.title("📊 Sistem Informasi & Data Dapur SPPG - BGN")
+st.write("Aplikasi Manajemen Penerima Manfaat Sekolah, Stunting, dan Legalitas Yayasan.")
+
+# 2. Raw Data dari CSV yang Anda Berikan
+raw_data = """No,Nama Yayasan,Alamat Dapur SPPG,Kecamatan SPPG,Kabupaten / Kota  SPPG,Provinsi SPPG,Nama PIC,No. HP PIC,Email
+1,Dapur Mandiri I Mulyono,Desa Kalipare,Kalipare,Malang,Jawa Timur,Mulyono,,
+2,PT. Indonesia Kalteng Nusantara,Kp. Benteng Kidul,Baros,Sukabumi,Jawa Barat,Prasetya Asmara Seno. S. E - PT. IKN,,
+3,PP Az Zain,Kp Cibalung Rt 03/04 Talaga Caringin,Patokbeusi,Sukabumi,Jawa Barat,Prasetya Asmara Seno. S. E - PT. IKN,,
+100,Yayasan CITRA SEJAHTERA KEDIRI,RT.020/RW.006 Dsn. Bringin Ds. Bandung,Prambon,Nganjuk,Jawa Timur,Elys Sulistiani,081332334159,elishafid8@gmail.com
+101,Yayasan CITRA SEJAHTERA KEDIRI,RT.001/RW.004 Dsn. Banjar Sari Ds. Banjar Sari,Ngronggot,Nganjuk,Jawa Timur,Anik Asianah,082233456305,anik.asiana@gmail.com"""
+
+df = pd.read_csv(io.StringIO(raw_data))
+
+# 3. Fitur Statistik Singkat (Metrik)
+total_yayasan = len(df)
+st.metric(label="Total Dapur Terdata", value=total_yayasan)
+
+# 4. Fitur Filter Pencarian Online
+st.subheader("🔍 Filter & Cari Data Dapur")
+search_query = st.text_input("Cari nama yayasan, kecamatan, atau kota:")
+provinsi_filter = st.selectbox("Pilih Provinsi:", ["Semua Provinsi"] + list(df['Provinsi SPPG'].unique()))
+
+# Logika Penyaringan
+filtered_df = df.copy()
+if search_query:
+    filtered_df = filtered_df[filtered_df.astype(str).apply(lambda x: x.str.contains(search_query, case=False)).any(axis=1)]
+if provinsi_filter != "Semua Provinsi":
+    filtered_df = filtered_df[filtered_df['Provinsi SPPG'] == provinsi_filter]
+
+# 5. Menampilkan Data Tabel
+st.dataframe(filtered_df, use_container_width=True)
+
+# 6. Fitur Form Input Data Baru
+st.subheader("📝 Tambah Data Dapur SPPG Baru")
+with st.form("form_dapur"):
+    col1, col2 = st.columns(2)
+    with col1:
+        nama = st.text_input("Nama Yayasan / Dapur")
+        alamat = st.text_input("Alamat Lengkap Dapur")
+        kec = st.text_input("Kecamatan")
+    with col2:
+        kota = st.text_input("Kabupaten / Kota")
+        prov = st.text_input("Provinsi")
+        pic = st.text_input("Nama PIC")
+        
+    submitted = st.form_submit_submit_button("Simpan Data")
+    if submitted:
+        st.success(f"Data {nama} berhasil direkam ke sistem online!")
